@@ -1,15 +1,14 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import MysticBackground from "@/components/MysticBackground";
-import GenerateButton from "@/components/GenerateButton";
 import ResultCard from "@/components/ResultCard";
 import CadastroResultado from "@/components/CadastroResultado";
 import SaoCiprianoForm from "@/components/SaoCiprianoForm";
-import { generateAnalysis, AnalysisResult } from "@/utils/analysisEngine";
+import { generateCanalMagnetico, AnalysisResult } from "@/utils/analysisEngine";
 import { MODALIDADES } from "@/data/bichoData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "lucide-react";
+import { Calendar, Sparkles, Zap } from "lucide-react";
 
 const HORARIOS = [
   "09:20", "11:20", "14:20", "16:20", "18:20", "21:20"
@@ -27,13 +26,13 @@ const Index = () => {
     if (!modalidade || !horario) return;
 
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     const selectedModalidade = MODALIDADES.find(m => m.id === modalidade);
     const digitos = selectedModalidade?.digitos || 2;
     
-    // Use estatistica method combined with time context
-    const analysisResult = generateAnalysis("estatistica", digitos);
+    // Usar o Canal Magnético que combina TODOS os métodos
+    const analysisResult = generateCanalMagnetico(digitos, horario.replace(":", "h").slice(0, 2) + "h");
     setResult(analysisResult);
     setHistory(prev => [analysisResult, ...prev.slice(0, 4)]);
     setLoading(false);
@@ -63,13 +62,30 @@ const Index = () => {
 
             <TabsContent value="oraculo">
               <div className="space-y-6">
-                {/* Seleção Simplificada */}
-                <div className="p-6 rounded-2xl bg-card/50 border border-gold/10 backdrop-blur-sm space-y-6">
-                  <div className="text-center mb-4">
-                    <h2 className="font-cinzel text-2xl text-gold mb-2">Consulta Rápida</h2>
+                {/* Canal Magnético */}
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-yellow-900/20 via-card/50 to-green-900/20 border border-gold/30 backdrop-blur-sm space-y-6 relative overflow-hidden">
+                  {/* Decoração de dinheiro */}
+                  <div className="absolute top-2 right-2 text-4xl opacity-20 animate-float">💰</div>
+                  <div className="absolute bottom-2 left-2 text-3xl opacity-20 animate-float" style={{ animationDelay: "0.5s" }}>💶</div>
+                  <div className="absolute top-1/2 right-8 text-2xl opacity-10 animate-float" style={{ animationDelay: "1s" }}>💵</div>
+                  
+                  <div className="text-center mb-4 relative">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <span className="text-2xl">💰</span>
+                      <h2 className="font-cinzel text-2xl bg-gradient-to-r from-yellow-400 via-gold to-yellow-500 bg-clip-text text-transparent">
+                        Canal Magnético da Prosperidade
+                      </h2>
+                      <span className="text-2xl">💰</span>
+                    </div>
                     <p className="font-cormorant text-muted-foreground">
-                      Selecione o tipo de jogo, data e horário
+                      ⚡ 11 métodos místicos trabalhando juntos ⚡
                     </p>
+                    <div className="flex flex-wrap justify-center gap-1 mt-2 text-xs text-gold/60">
+                      <span>📊 Estatística</span>•<span>🌀 Fibonacci</span>•<span>⚡ Tesla</span>•
+                      <span>🔢 Numerologia</span>•<span>♈ Astrologia</span>•<span>🌙 Lunar</span>•
+                      <span>⚛️ Quântica</span>•<span>🧲 Atração</span>•<span>✡️ Kabbalah</span>•
+                      <span>📖 Bíblia</span>•<span>✨ Magia</span>
+                    </div>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-3">
@@ -79,7 +95,7 @@ const Index = () => {
                         <span className="text-gold">🎯</span> Tipo de Jogo
                       </label>
                       <Select value={modalidade || ""} onValueChange={setModalidade}>
-                        <SelectTrigger className="bg-background/50 border-gold/20 font-cormorant">
+                        <SelectTrigger className="bg-background/50 border-gold/30 font-cormorant hover:border-gold/50 transition-colors">
                           <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -101,7 +117,7 @@ const Index = () => {
                         type="date"
                         value={data}
                         onChange={(e) => setData(e.target.value)}
-                        className="w-full px-3 py-2 rounded-md bg-background/50 border border-gold/20 font-cormorant text-foreground focus:border-gold/50 focus:outline-none"
+                        className="w-full px-3 py-2 rounded-md bg-background/50 border border-gold/30 font-cormorant text-foreground focus:border-gold/60 focus:outline-none hover:border-gold/50 transition-colors"
                       />
                     </div>
 
@@ -111,7 +127,7 @@ const Index = () => {
                         <span className="text-gold">🕐</span> Horário
                       </label>
                       <Select value={horario || ""} onValueChange={setHorario}>
-                        <SelectTrigger className="bg-background/50 border-gold/20 font-cormorant">
+                        <SelectTrigger className="bg-background/50 border-gold/30 font-cormorant hover:border-gold/50 transition-colors">
                           <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -125,11 +141,33 @@ const Index = () => {
                     </div>
                   </div>
 
-                  <GenerateButton 
+                  {/* Botão Magnético */}
+                  <button
                     onClick={handleGenerate}
-                    disabled={!canGenerate}
-                    loading={loading}
-                  />
+                    disabled={!canGenerate || loading}
+                    className={`
+                      w-full py-4 px-6 rounded-xl font-cinzel text-lg uppercase tracking-wider
+                      transition-all duration-300 relative overflow-hidden
+                      ${canGenerate && !loading 
+                        ? "bg-gradient-to-r from-yellow-600 via-gold to-yellow-500 text-black shadow-[0_0_30px_rgba(234,179,8,0.4)] hover:shadow-[0_0_50px_rgba(234,179,8,0.6)] hover:scale-[1.02]" 
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                      }
+                    `}
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Sparkles className="w-5 h-5 animate-spin" />
+                        Canalizando Energias...
+                        <Sparkles className="w-5 h-5 animate-spin" />
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <Zap className="w-5 h-5" />
+                        💰 Ativar Canal Magnético 💰
+                        <Zap className="w-5 h-5" />
+                      </span>
+                    )}
+                  </button>
                 </div>
 
                 {/* Resultado */}
