@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import { InstallPWA } from "./components/InstallPWA";
 
 const queryClient = new QueryClient();
 
@@ -14,6 +15,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <InstallPWA />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
