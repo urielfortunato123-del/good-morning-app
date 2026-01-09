@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import MysticBackground from "@/components/MysticBackground";
 import ResultCard from "@/components/ResultCard";
@@ -12,13 +13,15 @@ import { useInteligenciaQuantica, AnaliseQuantica } from "@/hooks/useInteligenci
 import { MODALIDADES } from "@/data/bichoData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Sparkles, Zap, Trophy, Brain } from "lucide-react";
+import { Calendar, Sparkles, Zap, Trophy, Brain, HelpCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const HORARIOS = [
   "09:20", "11:20", "14:20", "16:20", "18:20", "21:20"
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
   const [modalidade, setModalidade] = useState<string | null>(null);
   const [data, setData] = useState<string>(new Date().toISOString().split('T')[0]);
   const [horario, setHorario] = useState<string | null>(null);
@@ -30,6 +33,14 @@ const Index = () => {
   const [modoQuantico, setModoQuantico] = useState(false);
   
   const { analisar, loading: loadingQuantico } = useInteligenciaQuantica();
+
+  // Check onboarding on mount
+  useEffect(() => {
+    const completed = localStorage.getItem("onboarding_completed");
+    if (!completed) {
+      navigate("/onboarding");
+    }
+  }, [navigate]);
 
   const handleGenerate = async () => {
     if (!modalidade || !horario) return;
@@ -294,10 +305,22 @@ const Index = () => {
       </main>
 
       <footer className="border-t border-gold/10 mt-16 py-6">
-        <div className="container mx-auto px-4 text-center">
+        <div className="container mx-auto px-4 text-center space-y-3">
           <p className="font-cormorant text-sm text-muted-foreground">
             ✧ Oráculo do Bicho — Sabedoria Mística & Análise Esotérica ✧
           </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              localStorage.removeItem("onboarding_completed");
+              navigate("/onboarding");
+            }}
+            className="text-xs text-muted-foreground hover:text-primary"
+          >
+            <HelpCircle className="w-3 h-3 mr-1" />
+            Ver tutorial novamente
+          </Button>
         </div>
       </footer>
     </div>
