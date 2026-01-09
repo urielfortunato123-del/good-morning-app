@@ -1,6 +1,6 @@
 import { AnalysisResult } from "@/utils/analysisEngine";
 import { cn } from "@/lib/utils";
-import { Sparkles, TrendingUp, Zap } from "lucide-react";
+import { Sparkles, TrendingUp, Zap, Flame, Clock } from "lucide-react";
 
 interface ResultCardProps {
   result: AnalysisResult;
@@ -33,6 +33,16 @@ const ResultCard = ({ result, modalidade }: ResultCardProps) => {
             <span className="text-sm font-cormorant text-gold">{result.energia}</span>
           </div>
         </div>
+
+        {/* Analysis Time Badge */}
+        {result.horarioAnalise && (
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Clock className="w-4 h-4 text-mystic-purple" />
+            <span className="text-sm text-muted-foreground">
+              Análise otimizada para extração das <span className="text-gold font-semibold">{result.horarioAnalise}</span>
+            </span>
+          </div>
+        )}
 
         {/* Numbers Display */}
         <div className="flex flex-wrap justify-center gap-4 mb-6">
@@ -75,15 +85,54 @@ const ResultCard = ({ result, modalidade }: ResultCardProps) => {
           </div>
         )}
 
+        {/* Hot Groups Panel */}
+        {result.gruposQuentes && result.gruposQuentes.length > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-orange-500/10 via-red-500/10 to-orange-500/10 border border-orange-500/30">
+            <div className="flex items-center gap-2 mb-3">
+              <Flame className="w-5 h-5 text-orange-500" />
+              <span className="font-cinzel text-sm text-orange-400 uppercase tracking-wider">
+                Grupos Quentes (Dados Reais)
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {result.gruposQuentes.map((g, i) => (
+                <div 
+                  key={i}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-sm font-medium",
+                    "bg-gradient-to-r border",
+                    g.status === '🔥🔥🔥' 
+                      ? "from-red-500/20 to-orange-500/20 border-red-500/40 text-red-400"
+                      : g.status === '🔥🔥'
+                      ? "from-orange-500/20 to-yellow-500/20 border-orange-500/40 text-orange-400"
+                      : "from-yellow-500/20 to-amber-500/20 border-yellow-500/40 text-yellow-400"
+                  )}
+                >
+                  <span className="mr-1">{g.status}</span>
+                  <span className="font-cinzel">{g.nome}</span>
+                  <span className="text-xs ml-1 opacity-70">({g.grupo})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Confidence Meter */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground font-cormorant">Confiança Energética</span>
+            <span className="text-sm text-muted-foreground font-cormorant">Confiança Estatística</span>
             <span className="text-sm font-cinzel text-gold">{result.confianca}%</span>
           </div>
           <div className="h-2 rounded-full bg-muted overflow-hidden">
             <div 
-              className="h-full rounded-full bg-gradient-to-r from-gold-dark via-gold to-gold-light transition-all duration-1000"
+              className={cn(
+                "h-full rounded-full transition-all duration-1000",
+                result.confianca >= 90 
+                  ? "bg-gradient-to-r from-green-500 via-emerald-400 to-green-500"
+                  : result.confianca >= 80
+                  ? "bg-gradient-to-r from-gold-dark via-gold to-gold-light"
+                  : "bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-400"
+              )}
               style={{ width: `${result.confianca}%` }}
             />
           </div>
@@ -103,7 +152,7 @@ const ResultCard = ({ result, modalidade }: ResultCardProps) => {
           </span>
           <div className="flex items-center gap-1 text-xs text-gold">
             <TrendingUp className="w-3 h-3" />
-            <span className="font-cinzel">Alta Vibração</span>
+            <span className="font-cinzel">Base: 50+ Extrações</span>
           </div>
         </div>
       </div>
