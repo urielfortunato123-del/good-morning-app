@@ -1,13 +1,35 @@
 import { AnalysisResult } from "@/utils/analysisEngine";
 import { cn } from "@/lib/utils";
-import { Sparkles, TrendingUp, Zap, Flame, Clock, DollarSign } from "lucide-react";
+import { Sparkles, TrendingUp, Zap, Flame, Clock, DollarSign, Trophy, Check } from "lucide-react";
+import { useAcertosHistorico } from "@/hooks/useAcertosHistorico";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface ResultCardProps {
   result: AnalysisResult;
   modalidade: string;
+  data?: string;
+  horario?: string;
 }
 
-const ResultCard = ({ result, modalidade }: ResultCardProps) => {
+const ResultCard = ({ result, modalidade, data, horario }: ResultCardProps) => {
+  const { salvarAcerto } = useAcertosHistorico();
+  const [marcado, setMarcado] = useState(false);
+
+  const handleMarcarAcerto = () => {
+    salvarAcerto({
+      numeros: result.numeros,
+      grupo: result.grupo?.grupo,
+      animal: result.grupo?.nome,
+      modalidade,
+      data: data || new Date().toISOString().split('T')[0],
+      horario: horario || result.horarioAnalise || '',
+      metodosUsados: result.metodosUsados || [],
+    });
+    setMarcado(true);
+    toast.success("🏆 Acerto registrado! Isso vai melhorar suas próximas análises.");
+  };
+
   return (
     <div className="relative overflow-hidden rounded-2xl border-2 border-gold/50 bg-gradient-to-br from-yellow-900/20 via-card to-green-900/20 animate-scale-in shadow-[0_0_40px_rgba(234,179,8,0.3)]">
       {/* Decorative corners */}
@@ -166,6 +188,31 @@ const ResultCard = ({ result, modalidade }: ResultCardProps) => {
           <span className="text-xs text-muted-foreground font-cormorant">
             💰 {new Date().toLocaleTimeString('pt-BR')}
           </span>
+          
+          {/* Botão Marcar Acerto */}
+          <button
+            onClick={handleMarcarAcerto}
+            disabled={marcado}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg font-cinzel text-sm transition-all",
+              marcado 
+                ? "bg-green-500/20 text-green-400 border border-green-500/40 cursor-default"
+                : "bg-gold/20 text-gold border border-gold/40 hover:bg-gold/30 hover:border-gold/60"
+            )}
+          >
+            {marcado ? (
+              <>
+                <Check className="w-4 h-4" />
+                Acerto Registrado!
+              </>
+            ) : (
+              <>
+                <Trophy className="w-4 h-4" />
+                Marcar como Acerto
+              </>
+            )}
+          </button>
+
           <div className="flex items-center gap-1 text-xs text-gold">
             <TrendingUp className="w-3 h-3" />
             <span className="font-cinzel">11 Métodos Unidos</span>

@@ -5,11 +5,12 @@ import ResultCard from "@/components/ResultCard";
 import CadastroResultado from "@/components/CadastroResultado";
 import SaoCiprianoForm from "@/components/SaoCiprianoForm";
 import { CoinAnimation } from "@/components/CoinAnimation";
+import HistoricoAcertos from "@/components/HistoricoAcertos";
 import { generateCanalMagnetico, AnalysisResult } from "@/utils/analysisEngine";
 import { MODALIDADES } from "@/data/bichoData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Sparkles, Zap } from "lucide-react";
+import { Calendar, Sparkles, Zap, Trophy } from "lucide-react";
 
 const HORARIOS = [
   "09:20", "11:20", "14:20", "16:20", "18:20", "21:20"
@@ -52,12 +53,15 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="oraculo" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6 bg-card/50 border border-gold/10">
+            <TabsList className="grid w-full grid-cols-4 mb-6 bg-card/50 border border-gold/10">
               <TabsTrigger value="oraculo" className="font-cinzel text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🔮 Oráculo
               </TabsTrigger>
+              <TabsTrigger value="acertos" className="font-cinzel text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+                🏆 Acertos
+              </TabsTrigger>
               <TabsTrigger value="cipriano" className="font-cinzel text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
-                📖 São Cipriano
+                📖 Cipriano
               </TabsTrigger>
               <TabsTrigger value="cadastro" className="font-cinzel text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 📝 Cadastrar
@@ -176,7 +180,7 @@ const Index = () => {
 
                 {/* Resultado */}
                 {result ? (
-                  <ResultCard result={result} modalidade={modalidade || ''} />
+                  <ResultCard result={result} modalidade={modalidade || ''} data={data} horario={horario || ''} />
                 ) : (
                   <div className="flex items-center justify-center p-8 rounded-2xl border border-dashed border-gold/20 bg-card/30">
                     <div className="text-center">
@@ -218,6 +222,19 @@ const Index = () => {
                     ⚠️ Este aplicativo é apenas para entretenimento. Jogue com responsabilidade.
                   </p>
                 </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="acertos">
+              <div className="p-6 rounded-2xl bg-card/50 border border-gold/20 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-6">
+                  <Trophy className="w-6 h-6 text-gold" />
+                  <h2 className="font-cinzel text-xl text-gold">Histórico de Acertos</h2>
+                </div>
+                <p className="font-cormorant text-muted-foreground text-sm mb-4">
+                  Seus números vencedores ficam salvos aqui e ajudam a melhorar as análises futuras!
+                </p>
+                <HistoricoAcertos />
               </div>
             </TabsContent>
 
