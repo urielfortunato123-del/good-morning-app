@@ -6,11 +6,13 @@ import CadastroResultado from "@/components/CadastroResultado";
 import SaoCiprianoForm from "@/components/SaoCiprianoForm";
 import { CoinAnimation } from "@/components/CoinAnimation";
 import HistoricoAcertos from "@/components/HistoricoAcertos";
+import PainelQuantico from "@/components/PainelQuantico";
 import { generateCanalMagnetico, AnalysisResult } from "@/utils/analysisEngine";
+import { useInteligenciaQuantica, AnaliseQuantica } from "@/hooks/useInteligenciaQuantica";
 import { MODALIDADES } from "@/data/bichoData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Sparkles, Zap, Trophy } from "lucide-react";
+import { Calendar, Sparkles, Zap, Trophy, Brain } from "lucide-react";
 
 const HORARIOS = [
   "09:20", "11:20", "14:20", "16:20", "18:20", "21:20"
@@ -21,25 +23,58 @@ const Index = () => {
   const [data, setData] = useState<string>(new Date().toISOString().split('T')[0]);
   const [horario, setHorario] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [analiseQuantica, setAnaliseQuantica] = useState<AnaliseQuantica | null>(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<AnalysisResult[]>([]);
   const [showCoins, setShowCoins] = useState(false);
+  const [modoQuantico, setModoQuantico] = useState(false);
+  
+  const { analisar, loading: loadingQuantico } = useInteligenciaQuantica();
 
   const handleGenerate = async () => {
     if (!modalidade || !horario) return;
 
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
     const selectedModalidade = MODALIDADES.find(m => m.id === modalidade);
     const digitos = selectedModalidade?.digitos || 2;
-    
-    // Usar o Canal Magnético que combina TODOS os métodos
-    const analysisResult = generateCanalMagnetico(digitos, horario.replace(":", "h").slice(0, 2) + "h");
-    setResult(analysisResult);
-    setHistory(prev => [analysisResult, ...prev.slice(0, 4)]);
-    setLoading(false);
-    setShowCoins(true);
+
+    if (modoQuantico) {
+      // Usar IA Quântica
+      setLoading(true);
+      const analise = await analisar(horario, modalidade, digitos);
+      if (analise) {
+        setAnaliseQuantica(analise);
+        // Converter para formato AnalysisResult
+        const analysisResult: AnalysisResult = {
+          numeros: analise.numeros,
+          grupo: undefined,
+          metodo: "inteligencia-quantica",
+          explicacao: analise.explicacao,
+          energia: "🧠 INTELIGÊNCIA QUÂNTICA 🧠",
+          confianca: analise.confianca,
+          gruposQuentes: analise.gruposQuentes?.map(g => ({ 
+            grupo: g, 
+            nome: MODALIDADES.find(m => m.id === modalidade)?.nome || "Grupo " + g,
+            status: "🔥🔥🔥"
+          })),
+          horarioAnalise: horario,
+          metodosUsados: ["🧠 IA Quântica", ...analise.padroesIdentificados.slice(0, 5)],
+          usouAcertosHistoricos: true
+        };
+        setResult(analysisResult);
+        setHistory(prev => [analysisResult, ...prev.slice(0, 4)]);
+      }
+      setLoading(false);
+      setShowCoins(true);
+    } else {
+      // Usar Canal Magnético tradicional
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const analysisResult = generateCanalMagnetico(digitos, horario.replace(":", "h").slice(0, 2) + "h");
+      setResult(analysisResult);
+      setHistory(prev => [analysisResult, ...prev.slice(0, 4)]);
+      setLoading(false);
+      setShowCoins(true);
+    }
   };
 
   const canGenerate = modalidade && horario;
@@ -53,17 +88,20 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="oraculo" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6 bg-card/50 border border-gold/10">
-              <TabsTrigger value="oraculo" className="font-cinzel text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+            <TabsList className="grid w-full grid-cols-5 mb-6 bg-card/50 border border-gold/10">
+              <TabsTrigger value="oraculo" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🔮 Oráculo
               </TabsTrigger>
-              <TabsTrigger value="acertos" className="font-cinzel text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+              <TabsTrigger value="quantico" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+                🧠 IA
+              </TabsTrigger>
+              <TabsTrigger value="acertos" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🏆 Acertos
               </TabsTrigger>
-              <TabsTrigger value="cipriano" className="font-cinzel text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+              <TabsTrigger value="cipriano" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 📖 Cipriano
               </TabsTrigger>
-              <TabsTrigger value="cadastro" className="font-cinzel text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+              <TabsTrigger value="cadastro" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 📝 Cadastrar
               </TabsTrigger>
             </TabsList>
@@ -223,6 +261,10 @@ const Index = () => {
                   </p>
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="quantico">
+              <PainelQuantico />
             </TabsContent>
 
             <TabsContent value="acertos">
