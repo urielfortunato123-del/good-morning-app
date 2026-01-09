@@ -11,6 +11,7 @@ import {
   MILHARES_FREQUENTES,
   CENTENAS_FREQUENTES
 } from "@/data/historicalData";
+import { getAcertosFromStorage } from "@/hooks/useAcertosHistorico";
 
 // Fibonacci sequence
 const fibonacci = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
@@ -115,6 +116,52 @@ const gerarDezenasFrequentes = (count: number = 3): string[] => {
   return selecionadas;
 };
 
+// Função para obter estatísticas dos acertos do usuário
+const getEstatisticasAcertos = () => {
+  const acertos = getAcertosFromStorage();
+  
+  const frequenciaGrupos: Record<number, number> = {};
+  const frequenciaMetodos: Record<string, number> = {};
+  const frequenciaHorarios: Record<string, number> = {};
+  const frequenciaNumeros: Record<string, number> = {};
+  
+  acertos.forEach(a => {
+    if (a.grupo) {
+      frequenciaGrupos[a.grupo] = (frequenciaGrupos[a.grupo] || 0) + 1;
+    }
+    a.metodosUsados?.forEach(m => {
+      frequenciaMetodos[m] = (frequenciaMetodos[m] || 0) + 1;
+    });
+    frequenciaHorarios[a.horario] = (frequenciaHorarios[a.horario] || 0) + 1;
+    a.numeros?.forEach(n => {
+      frequenciaNumeros[n] = (frequenciaNumeros[n] || 0) + 1;
+    });
+  });
+  
+  const gruposTop = Object.entries(frequenciaGrupos)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([grupo, freq]) => ({ grupo: parseInt(grupo), frequencia: freq }));
+  
+  const metodosTop = Object.entries(frequenciaMetodos)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([metodo, freq]) => ({ metodo, frequencia: freq }));
+  
+  const numerosTop = Object.entries(frequenciaNumeros)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([numero, freq]) => ({ numero, frequencia: freq }));
+
+  return { 
+    gruposTop, 
+    metodosTop, 
+    numerosTop,
+    frequenciaHorarios,
+    totalAcertos: acertos.length 
+  };
+};
+
 export interface AnalysisResult {
   numeros: string[];
   grupo?: typeof ANIMAIS[0];
@@ -125,6 +172,7 @@ export interface AnalysisResult {
   gruposQuentes?: { grupo: number; nome: string; status: string }[];
   horarioAnalise?: string;
   metodosUsados?: string[];
+  usouAcertosHistoricos?: boolean;
 }
 
 // Função principal: Canal Magnético - combina TODOS os métodos
@@ -137,8 +185,33 @@ export const generateCanalMagnetico = (digitos: number, horarioSelecionado?: str
   const diaSemana = now.getDay();
   const horarioAtual = horarioSelecionado || getHorarioAtual();
   
+  // NOVO: Obter estatísticas dos acertos do usuário
+  const statsAcertos = getEstatisticasAcertos();
+  const usouAcertosHistoricos = statsAcertos.totalAcertos > 0;
+  
   // Coletar números de TODOS os métodos
   const todosNumeros: Map<string, number> = new Map(); // número -> peso
+  
+  // 0. PRIORIDADE MÁXIMA: Números que já acertaram antes (baseado no histórico do usuário)
+  if (statsAcertos.numerosTop.length > 0) {
+    statsAcertos.numerosTop.forEach(({ numero, frequencia }) => {
+      const peso = Math.min(frequencia * 8, 30);
+      todosNumeros.set(numero, (todosNumeros.get(numero) || 0) + peso);
+    });
+  }
+  
+  // 0.1. Grupos que historicamente mais acertaram
+  if (statsAcertos.gruposTop.length > 0) {
+    statsAcertos.gruposTop.forEach(({ grupo, frequencia }) => {
+      const animal = ANIMAIS.find(a => a.grupo === grupo);
+      if (animal) {
+        animal.numeros.forEach(n => {
+          const peso = Math.min(frequencia * 6, 25);
+          todosNumeros.set(n, (todosNumeros.get(n) || 0) + peso);
+        });
+      }
+    });
+  }
   
   // 1. FIBONACCI + HISTÓRICO
   const fibIndices = getRandomFromArray(fibonacci, 3);
@@ -276,23 +349,32 @@ export const generateCanalMagnetico = (digitos: number, horarioSelecionado?: str
   const pesoMaximo = todosNumeros.get(numerosFinais[0]) || 1;
   const confianca = Math.min(75 + Math.floor(pesoMaximo * 2), 98);
   
-  const metodosUsados = [
-    "📊 Estatística", "🌀 Fibonacci", "⚡ Tesla 369", 
-    "🔢 Numerologia", "♈ Astrologia", "🌙 Lunar",
-    "⚛️ Quântica", "🧲 Atração", "✡️ Kabbalah", 
-    "📖 Bíblia", "✨ Magia Lo Shu"
-  ];
+  const metodosUsados = usouAcertosHistoricos
+    ? ["🏆 Acertos Históricos", "📊 Estatística", "🌀 Fibonacci", "⚡ Tesla 369", 
+       "🔢 Numerologia", "♈ Astrologia", "🌙 Lunar", "⚛️ Quântica", 
+       "🧲 Atração", "✡️ Kabbalah", "📖 Bíblia", "✨ Magia Lo Shu"]
+    : ["📊 Estatística", "🌀 Fibonacci", "⚡ Tesla 369", 
+       "🔢 Numerologia", "♈ Astrologia", "🌙 Lunar",
+       "⚛️ Quântica", "🧲 Atração", "✡️ Kabbalah", 
+       "📖 Bíblia", "✨ Magia Lo Shu"];
+  
+  const explicacaoBase = `💰 CANAL MAGNÉTICO ATIVADO! ${metodosUsados.length} métodos convergem para estes números.`;
+  const explicacaoAcertos = usouAcertosHistoricos 
+    ? ` 🏆 ${statsAcertos.totalAcertos} acertos anteriores priorizados!` 
+    : "";
+  const explicacaoFinal = `${explicacaoBase}${explicacaoAcertos} Fase lunar ${moonNum}% + ${gruposQuentes[0].nome} ultra hot + tendência ${['DOM','SEG','TER','QUA','QUI','SEX','SÁB'][diaSemana]} = MÁXIMA ENERGIA DE PROSPERIDADE! Horário ${horarioAtual} potencializa a vibração.`;
   
   return {
     numeros: numerosFinais,
     grupo,
     metodo: "canal-magnetico",
-    explicacao: `💰 CANAL MAGNÉTICO ATIVADO! ${metodosUsados.length} métodos convergem para estes números. Fase lunar ${moonNum}% + ${gruposQuentes[0].nome} ultra hot + tendência ${['DOM','SEG','TER','QUA','QUI','SEX','SÁB'][diaSemana]} = MÁXIMA ENERGIA DE PROSPERIDADE! Horário ${horarioAtual} potencializa a vibração.`,
-    energia: "💰 MÁXIMA PROSPERIDADE 💰",
-    confianca,
+    explicacao: explicacaoFinal,
+    energia: usouAcertosHistoricos ? "🏆 SORTE AMPLIFICADA 🏆" : "💰 MÁXIMA PROSPERIDADE 💰",
+    confianca: usouAcertosHistoricos ? Math.min(confianca + 5, 99) : confianca,
     gruposQuentes,
     horarioAnalise: horarioAtual,
-    metodosUsados
+    metodosUsados,
+    usouAcertosHistoricos
   };
 };
 

@@ -47,6 +47,17 @@ const ResultCard = ({ result, modalidade, data, horario }: ResultCardProps) => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gold/15 rounded-full blur-3xl" />
 
       <div className="relative z-10 p-6 md:p-8">
+        {/* Boost de Acertos Históricos */}
+        {result.usouAcertosHistoricos && (
+          <div className="flex items-center justify-center gap-2 mb-4 p-2 rounded-lg bg-green-500/20 border border-green-500/40">
+            <Trophy className="w-5 h-5 text-green-400" />
+            <span className="font-cinzel text-sm text-green-400">
+              Potencializado pelos seus Acertos Anteriores!
+            </span>
+            <Trophy className="w-5 h-5 text-green-400" />
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-center gap-3 mb-6">
           <DollarSign className="w-6 h-6 text-gold animate-pulse" />
