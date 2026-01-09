@@ -41,87 +41,94 @@ export const MODALIDADES = [
 
 export const METODOS_ANALISE = [
   {
+    id: "estatistica",
+    nome: "📊 Estatística Pura",
+    icone: "📊",
+    descricao: "Baseado em 50+ extrações reais",
+    categoria: "dados"
+  },
+  {
     id: "fibonacci",
     nome: "Fibonacci",
     icone: "🌀",
-    descricao: "Sequência áurea da natureza",
+    descricao: "Sequência áurea + dados históricos",
     categoria: "matematica"
   },
   {
     id: "tesla",
     nome: "Tesla 369",
     icone: "⚡",
-    descricao: "Os números da energia universal",
+    descricao: "Energia universal + frequências",
     categoria: "matematica"
   },
   {
     id: "numerologia",
     nome: "Numerologia",
     icone: "🔢",
-    descricao: "Vibrações numéricas pessoais",
+    descricao: "Vibrações + padrões estatísticos",
     categoria: "esoterica"
   },
   {
     id: "kabbalah",
     nome: "Kabbalah",
     icone: "✡️",
-    descricao: "Sabedoria mística judaica",
+    descricao: "Sabedoria mística + dados",
     categoria: "esoterica"
   },
   {
     id: "astrologia",
     nome: "Astrologia",
     icone: "♈",
-    descricao: "Influência dos astros",
+    descricao: "Astros + tendências do dia",
     categoria: "astral"
   },
   {
     id: "cosmico",
     nome: "Cósmico Astral",
     icone: "🌌",
-    descricao: "Alinhamento planetário",
+    descricao: "Fase lunar + grupos quentes",
     categoria: "astral"
   },
   {
     id: "quantica",
     nome: "Quântica",
     icone: "⚛️",
-    descricao: "Probabilidades quânticas",
+    descricao: "Probabilidades + Big Data",
     categoria: "cientifica"
   },
   {
     id: "lei-atracao",
     nome: "Lei da Atração",
     icone: "🧲",
-    descricao: "Manifestação de abundância",
+    descricao: "Abundância + estatísticas",
     categoria: "metafisica"
   },
   {
     id: "lei-suposicao",
     nome: "Lei da Suposição",
     icone: "💭",
-    descricao: "Poder da imaginação criadora",
+    descricao: "Imaginação + frequência por horário",
     categoria: "metafisica"
   },
   {
     id: "biblia",
     nome: "Bíblia Sagrada",
     icone: "📖",
-    descricao: "Números bíblicos sagrados",
+    descricao: "Números sagrados + padrões",
     categoria: "religiosa"
   },
   {
     id: "apocrifos",
     nome: "Livros Apócrifos",
     icone: "📜",
-    descricao: "Conhecimento oculto ancestral",
+    descricao: "Enoque + grupos repetitivos",
     categoria: "religiosa"
   },
   {
     id: "magia",
     nome: "Magia da Prosperidade",
     icone: "✨",
-    descricao: "Rituais de abundância",
+    descricao: "Lo Shu + grupos ultra hot",
     categoria: "ocultismo"
   },
 ];
