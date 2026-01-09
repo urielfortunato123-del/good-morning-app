@@ -22,18 +22,24 @@ export const getGrupoFromDezena = (dezena: string): { grupo: number; animal: str
   return { grupo, animal };
 };
 
+// Função para acessar resultados sem hook (para uso no motor de análise)
+export const getResultadosFromStorage = (): ResultadoCadastrado[] => {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 export const useResultadosHistoricos = () => {
   const [resultados, setResultados] = useState<ResultadoCadastrado[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setResultados(JSON.parse(stored));
-      } catch {
-        setResultados([]);
-      }
-    }
+    setResultados(getResultadosFromStorage());
   }, []);
 
   const salvarResultado = (resultado: Omit<ResultadoCadastrado, 'id' | 'createdAt' | 'grupo' | 'animal'>) => {
@@ -63,6 +69,40 @@ export const useResultadosHistoricos = () => {
   const limparTodos = () => {
     setResultados([]);
     localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const exportarDados = (): string => {
+    return JSON.stringify(resultados, null, 2);
+  };
+
+  const importarDados = (jsonString: string): boolean => {
+    try {
+      const dados = JSON.parse(jsonString);
+      if (Array.isArray(dados)) {
+        // Validar estrutura básica
+        const validos = dados.filter(d => 
+          d.data && d.horario && d.milhar && typeof d.premio === 'number'
+        ).map(d => ({
+          ...d,
+          id: d.id || crypto.randomUUID(),
+          createdAt: d.createdAt || new Date().toISOString(),
+          grupo: d.grupo || getGrupoFromDezena(d.milhar.slice(-2)).grupo,
+          animal: d.animal || getGrupoFromDezena(d.milhar.slice(-2)).animal,
+        }));
+        
+        const novosResultados = [...validos, ...resultados];
+        // Remover duplicatas por id
+        const unicos = novosResultados.filter((r, i, arr) => 
+          arr.findIndex(x => x.id === r.id) === i
+        );
+        setResultados(unicos);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(unicos));
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   };
 
   const getEstatisticas = () => {
@@ -96,6 +136,8 @@ export const useResultadosHistoricos = () => {
     salvarResultado,
     removerResultado,
     limparTodos,
+    exportarDados,
+    importarDados,
     getEstatisticas,
   };
 };

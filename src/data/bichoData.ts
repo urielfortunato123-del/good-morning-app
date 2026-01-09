@@ -41,6 +41,13 @@ export const MODALIDADES = [
 
 export const METODOS_ANALISE = [
   {
+    id: "sao-cipriano",
+    nome: "📖 São Cipriano",
+    icone: "📖",
+    descricao: "Interprete seu sonho",
+    categoria: "tradicional"
+  },
+  {
     id: "estatistica",
     nome: "📊 Estatística Pura",
     icone: "📊",
@@ -52,6 +59,13 @@ export const METODOS_ANALISE = [
     nome: "Fibonacci",
     icone: "🌀",
     descricao: "Sequência áurea + dados históricos",
+    categoria: "matematica"
+  },
+  {
+    id: "tesla",
+    nome: "Tesla 369",
+    icone: "⚡",
+    descricao: "Energia universal + frequências",
     categoria: "matematica"
   },
   {

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useResultadosHistoricos, getGrupoFromDezena } from "@/hooks/useResultadosHistoricos";
 import { toast } from "@/hooks/use-toast";
-import { Trash2, Plus, Calendar, Clock, Trophy } from "lucide-react";
+import { Trash2, Plus, Calendar, Clock, Trophy, Download, Upload, BarChart3 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Link } from "react-router-dom";
 
 const HORARIOS = [
   { value: "09h", label: "09h - PT/PPT" },
@@ -20,11 +21,12 @@ const HORARIOS = [
 const PREMIOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 const CadastroResultado = () => {
-  const { resultados, salvarResultado, removerResultado, limparTodos, getEstatisticas } = useResultadosHistoricos();
+  const { resultados, salvarResultado, removerResultado, limparTodos, exportarDados, importarDados, getEstatisticas } = useResultadosHistoricos();
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   const [horario, setHorario] = useState<string>("");
   const [premio, setPremio] = useState<string>("");
   const [milhar, setMilhar] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +67,46 @@ const CadastroResultado = () => {
 
     setMilhar("");
     setPremio("");
+  };
+
+  const handleExport = () => {
+    const json = exportarDados();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oraculo-resultados-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({
+      title: "📥 Exportado!",
+      description: `${resultados.length} resultados salvos`,
+    });
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      const sucesso = importarDados(content);
+      if (sucesso) {
+        toast({
+          title: "📤 Importado!",
+          description: "Dados carregados com sucesso",
+        });
+      } else {
+        toast({
+          title: "❌ Erro",
+          description: "Arquivo inválido",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const stats = getEstatisticas();
@@ -149,6 +191,40 @@ const CadastroResultado = () => {
             Cadastrar
           </Button>
         </form>
+      </div>
+
+      {/* Ações Export/Import/Dashboard */}
+      <div className="flex flex-wrap gap-2">
+        <Link to="/dashboard" className="flex-1">
+          <Button variant="outline" className="w-full border-gold/20 hover:bg-gold/10">
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Ver Dashboard
+          </Button>
+        </Link>
+        <Button 
+          variant="outline" 
+          onClick={handleExport}
+          disabled={resultados.length === 0}
+          className="border-gold/20 hover:bg-gold/10"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Exportar
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => fileInputRef.current?.click()}
+          className="border-gold/20 hover:bg-gold/10"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Importar
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleImport}
+          className="hidden"
+        />
       </div>
 
       {/* Estatísticas Rápidas */}
