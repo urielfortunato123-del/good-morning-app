@@ -4,6 +4,7 @@ import MysticBackground from "@/components/MysticBackground";
 import ResultCard from "@/components/ResultCard";
 import CadastroResultado from "@/components/CadastroResultado";
 import SaoCiprianoForm from "@/components/SaoCiprianoForm";
+import { CoinAnimation } from "@/components/CoinAnimation";
 import { generateCanalMagnetico, AnalysisResult } from "@/utils/analysisEngine";
 import { MODALIDADES } from "@/data/bichoData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,6 +22,7 @@ const Index = () => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<AnalysisResult[]>([]);
+  const [showCoins, setShowCoins] = useState(false);
 
   const handleGenerate = async () => {
     if (!modalidade || !horario) return;
@@ -36,12 +38,14 @@ const Index = () => {
     setResult(analysisResult);
     setHistory(prev => [analysisResult, ...prev.slice(0, 4)]);
     setLoading(false);
+    setShowCoins(true);
   };
 
   const canGenerate = modalidade && horario;
 
   return (
     <div className="min-h-screen relative">
+      <CoinAnimation isActive={showCoins} onComplete={() => setShowCoins(false)} />
       <MysticBackground />
       <Header />
 

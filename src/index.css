@@ -150,4 +150,19 @@
   .animate-rotate-slow {
     animation: rotate-slow 20s linear infinite;
   }
+
+  @keyframes coin-fall {
+    0% {
+      transform: translateY(-100px) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
+
+  .animate-coin-fall {
+    animation: coin-fall 2s ease-in forwards;
+  }
 }
