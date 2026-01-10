@@ -25,8 +25,35 @@ const biblicalNumbers = [3, 7, 12, 40, 70, 77, 144, 666, 777, 888, 1000];
 // Kabbalistic numbers (Tree of Life)
 const kabbalisticNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 22, 33];
 
+// Gerador de números pseudo-aleatórios baseado em seed
+const seededRandom = (seed: number): () => number => {
+  let state = seed;
+  return () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+};
+
+// Criar seed baseada na data, horário e minuto atual (muda a cada minuto)
+const createSeed = (data?: string, horario?: string): number => {
+  const now = new Date();
+  const dataStr = data || now.toISOString().split('T')[0];
+  const horaStr = horario || `${now.getHours()}:${now.getMinutes()}`;
+  const seedString = `${dataStr}-${horaStr}-${now.getMinutes()}`;
+  
+  let hash = 0;
+  for (let i = 0; i < seedString.length; i++) {
+    const char = seedString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+};
+
+let currentRandom: () => number = Math.random;
+
 const getRandomFromArray = <T>(arr: T[], count: number = 1): T[] => {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  const shuffled = [...arr].sort(() => currentRandom() - 0.5);
   return shuffled.slice(0, count);
 };
 
@@ -76,15 +103,15 @@ const gerarNumerosHistoricos = (digitos: number): string[] => {
     const animal = ANIMAIS.find(a => a.grupo === grupo);
     if (animal) {
       const dezena = getRandomFromArray(animal.numeros, 1)[0];
-      if (digitos === 2) {
-        numeros.push(dezena);
-      } else if (digitos === 3) {
-        const centena = Math.floor(Math.random() * 10);
-        numeros.push(`${centena}${dezena}`);
-      } else {
-        const milhar = Math.floor(Math.random() * 100);
-        numeros.push(padNumber(milhar, 2) + dezena);
-      }
+        if (digitos === 2) {
+          numeros.push(dezena);
+        } else if (digitos === 3) {
+          const centena = Math.floor(currentRandom() * 10);
+          numeros.push(`${centena}${dezena}`);
+        } else {
+          const milhar = Math.floor(currentRandom() * 100);
+          numeros.push(padNumber(milhar, 2) + dezena);
+        }
     }
   }
   
@@ -100,7 +127,7 @@ const gerarDezenasFrequentes = (count: number = 3): string[] => {
   const selecionadas: string[] = [];
   for (let i = 0; i < count && i < dezenasOrdenadas.length; i++) {
     // Adicionar variação aleatória
-    if (Math.random() > 0.3 || selecionadas.length < 2) {
+    if (currentRandom() > 0.3 || selecionadas.length < 2) {
       selecionadas.push(dezenasOrdenadas[i].dezena);
     }
   }
@@ -176,8 +203,12 @@ export interface AnalysisResult {
 }
 
 // Função principal: Canal Magnético - combina TODOS os métodos
-export const generateCanalMagnetico = (digitos: number, horarioSelecionado?: string): AnalysisResult => {
-  const now = new Date();
+export const generateCanalMagnetico = (digitos: number, horarioSelecionado?: string, dataSelecionada?: string): AnalysisResult => {
+  // Inicializar gerador de números baseado na data e horário selecionados
+  const seed = createSeed(dataSelecionada, horarioSelecionado);
+  currentRandom = seededRandom(seed);
+  
+  const now = dataSelecionada ? new Date(dataSelecionada) : new Date();
   const day = now.getDate();
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
@@ -272,7 +303,7 @@ export const generateCanalMagnetico = (digitos: number, horarioSelecionado?: str
     const animal = ANIMAIS.find(a => a.grupo === grupo);
     if (animal) {
       animal.numeros.forEach(n => {
-        const num = digitos === 2 ? n : reduceToDigits(parseInt(n) + Math.floor(Math.random() * 90) * 10, digitos);
+        const num = digitos === 2 ? n : reduceToDigits(parseInt(n) + Math.floor(currentRandom() * 90) * 10, digitos);
         todosNumeros.set(num, (todosNumeros.get(num) || 0) + 5); // Maior peso para dados históricos
       });
     }
