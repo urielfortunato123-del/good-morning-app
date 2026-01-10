@@ -8,12 +8,13 @@ import SaoCiprianoForm from "@/components/SaoCiprianoForm";
 import { CoinAnimation } from "@/components/CoinAnimation";
 import HistoricoAcertos from "@/components/HistoricoAcertos";
 import PainelQuantico from "@/components/PainelQuantico";
+import AlertasQuanticos from "@/components/AlertasQuanticos";
 import { generateCanalMagnetico, AnalysisResult } from "@/utils/analysisEngine";
 import { useInteligenciaQuantica, AnaliseQuantica } from "@/hooks/useInteligenciaQuantica";
 import { MODALIDADES } from "@/data/bichoData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Sparkles, Zap, Trophy, Brain, HelpCircle } from "lucide-react";
+import { Calendar, Sparkles, Zap, Trophy, Brain, HelpCircle, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const HORARIOS = [
@@ -100,12 +101,15 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="oraculo" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6 bg-card/50 border border-gold/10">
+            <TabsList className="grid w-full grid-cols-6 mb-6 bg-card/50 border border-gold/10">
               <TabsTrigger value="oraculo" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🔮 Oráculo
               </TabsTrigger>
               <TabsTrigger value="quantico" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
                 🧠 IA
+              </TabsTrigger>
+              <TabsTrigger value="alertas" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400">
+                🔔 Alertas
               </TabsTrigger>
               <TabsTrigger value="acertos" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🏆 Acertos
@@ -277,6 +281,10 @@ const Index = () => {
 
             <TabsContent value="quantico">
               <PainelQuantico />
+            </TabsContent>
+
+            <TabsContent value="alertas">
+              <AlertasQuanticos />
             </TabsContent>
 
             <TabsContent value="acertos">

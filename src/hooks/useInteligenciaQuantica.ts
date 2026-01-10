@@ -13,6 +13,21 @@ export interface AnaliseQuantica {
   recomendacaoEspecial: string;
 }
 
+export interface AlertaQuantico {
+  tipo: string;
+  grupo?: number;
+  grupos?: number[];
+  mensagem: string;
+  prioridade: 'alta' | 'media' | 'baixa';
+}
+
+export interface AlertasResponse {
+  alertas: AlertaQuantico[];
+  proximoHorario: string;
+  gruposAtrasados: { grupo: number; diasAtrasado: number }[];
+  gruposQuentes: { grupo: number; frequencia: number }[];
+}
+
 export interface MetricasAprendizado {
   metricas: {
     total_previsoes: number;
@@ -27,6 +42,7 @@ export interface MetricasAprendizado {
     valor: string;
     frequencia: number;
     peso: number;
+    taxa_acerto?: number;
   }>;
   ultimasPrevisoes: Array<{
     id: string;
@@ -35,6 +51,7 @@ export interface MetricasAprendizado {
     confianca: number;
     created_at: string;
   }>;
+  gruposQuentes?: { grupo: number; frequencia: number }[];
 }
 
 export const useInteligenciaQuantica = () => {
@@ -121,6 +138,24 @@ export const useInteligenciaQuantica = () => {
     }
   };
 
+  const obterAlertas = async (): Promise<AlertasResponse | null> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('inteligencia-quantica', {
+        body: { action: 'obter_alertas', data: {} }
+      });
+
+      if (error) {
+        console.error('Erro ao obter alertas:', error);
+        return null;
+      }
+
+      return data;
+    } catch (err) {
+      console.error('Erro:', err);
+      return null;
+    }
+  };
+
   return {
     loading,
     analise,
@@ -128,5 +163,6 @@ export const useInteligenciaQuantica = () => {
     analisar,
     registrarResultado,
     obterMetricas,
+    obterAlertas,
   };
 };
