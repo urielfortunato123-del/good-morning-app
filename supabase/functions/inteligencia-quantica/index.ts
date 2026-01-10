@@ -122,16 +122,40 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     if (action === "analisar") {
-      console.log("Iniciando análise quântica...");
+      console.log("Iniciando análise quântica com padrões aprendidos...");
       
       // Buscar dados históricos para análise
       const { data: resultados } = await supabase
         .from("resultados_historicos")
         .select("*")
         .order("data", { ascending: false })
-        .limit(200);
+        .limit(300);
 
-      const { data: padroes } = await supabase
+      // BUSCAR PADRÕES COM PESO POR TIPO - PRIORIZA OS QUE MAIS ACERTAM
+      const { data: padroesGrupo } = await supabase
+        .from("padroes_aprendidos")
+        .select("*")
+        .eq("tipo", "grupo")
+        .order("taxa_acerto", { ascending: false })
+        .limit(25);
+
+      const { data: padroesHorarioGrupo } = await supabase
+        .from("padroes_aprendidos")
+        .select("*")
+        .eq("tipo", "horario_grupo")
+        .ilike("valor", `${data.horario}%`)
+        .order("peso", { ascending: false })
+        .limit(10);
+
+      const { data: padroesDiaGrupo } = await supabase
+        .from("padroes_aprendidos")
+        .select("*")
+        .eq("tipo", "dia_grupo")
+        .ilike("valor", `dia${new Date().getDay()}_%`)
+        .order("peso", { ascending: false })
+        .limit(10);
+
+      const { data: todosPadroes } = await supabase
         .from("padroes_aprendidos")
         .select("*")
         .order("peso", { ascending: false })
@@ -140,9 +164,9 @@ serve(async (req) => {
       const { data: previsoes } = await supabase
         .from("previsoes_quanticas")
         .select("*")
-        .not("acertou", "is", null)
+        .eq("acertou", true)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(50);
 
       const { data: metricas } = await supabase
         .from("metricas_aprendizado")
@@ -157,6 +181,7 @@ serve(async (req) => {
       
       // Identificar último grupo que saiu
       const ultimoGrupo = resultados?.[0]?.grupo;
+      const penultimoGrupo = resultados?.[1]?.grupo;
       const gruposProvaveis = ultimoGrupo ? analiseSequencias.gruposAposGrupo[ultimoGrupo] : {};
       
       // Grupos que mais saíram após o último grupo
@@ -165,8 +190,85 @@ serve(async (req) => {
         .slice(0, 5)
         .map(([g, freq]) => ({ grupo: parseInt(g), frequencia: freq }));
 
+      // GRUPOS QUENTES: alta frequência nos últimos 30 resultados
+      const frequenciaRecente: Record<number, number> = {};
+      (resultados || []).slice(0, 30).forEach(r => {
+        frequenciaRecente[r.grupo] = (frequenciaRecente[r.grupo] || 0) + 1;
+      });
+      const gruposQuentes = Object.entries(frequenciaRecente)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([g, f]) => ({ grupo: parseInt(g), frequencia: f }));
+
+      // GRUPOS FRIOS: baixa frequência recente
+      const gruposFrios = Object.entries(frequenciaRecente)
+        .sort((a, b) => a[1] - b[1])
+        .slice(0, 5)
+        .map(([g, f]) => ({ grupo: parseInt(g), frequencia: f }));
+
+      // PADRÕES QUE MAIS ACERTAM (por tipo)
+      const gruposComMaiorTaxa = (padroesGrupo || [])
+        .filter(p => (p.taxa_acerto || 0) > 50 && p.frequencia > 2)
+        .map(p => ({ grupo: parseInt(p.valor), taxa: p.taxa_acerto, peso: p.peso }));
+
+      const gruposParaEsteHorario = (padroesHorarioGrupo || [])
+        .map(p => ({ 
+          grupo: parseInt(p.valor.split('_')[1]), 
+          peso: p.peso, 
+          frequencia: p.frequencia,
+          taxa: p.taxa_acerto 
+        }));
+
+      const gruposParaHoje = (padroesDiaGrupo || [])
+        .map(p => ({ 
+          grupo: parseInt(p.valor.split('_')[1]), 
+          peso: p.peso,
+          frequencia: p.frequencia 
+        }));
+
+      // CALCULAR SCORE PONDERADO POR GRUPO
+      const scoreGrupos: Record<number, number> = {};
+      
+      // Peso 1: Taxa de acerto histórica
+      gruposComMaiorTaxa.forEach(g => {
+        scoreGrupos[g.grupo] = (scoreGrupos[g.grupo] || 0) + (g.taxa || 0) * 2;
+      });
+      
+      // Peso 2: Correlação com horário (muito importante!)
+      gruposParaEsteHorario.forEach(g => {
+        scoreGrupos[g.grupo] = (scoreGrupos[g.grupo] || 0) + g.peso * 15;
+      });
+      
+      // Peso 3: Grupos atrasados
+      gruposAtrasados.forEach((g, idx) => {
+        scoreGrupos[g.grupo] = (scoreGrupos[g.grupo] || 0) + (5 - idx) * 20;
+      });
+      
+      // Peso 4: Sequência após último grupo
+      proximosProvaveis.forEach((g, idx) => {
+        scoreGrupos[g.grupo] = (scoreGrupos[g.grupo] || 0) + (5 - idx) * 18;
+      });
+      
+      // Peso 5: Tendência do dia
+      gruposParaHoje.forEach(g => {
+        scoreGrupos[g.grupo] = (scoreGrupos[g.grupo] || 0) + g.peso * 10;
+      });
+
+      // Peso 6: Grupos quentes (momentum)
+      gruposQuentes.slice(0, 3).forEach((g, idx) => {
+        scoreGrupos[g.grupo] = (scoreGrupos[g.grupo] || 0) + (3 - idx) * 12;
+      });
+
+      // Top 8 grupos por score
+      const gruposRankeados = Object.entries(scoreGrupos)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([g, score]) => ({ grupo: parseInt(g), score }));
+
+      console.log("Grupos rankeados por score:", gruposRankeados);
+
       // Métricas de métodos que mais acertam
-      const metodosQueAcertam = (padroes || [])
+      const metodosQueAcertam = (todosPadroes || [])
         .filter(p => p.taxa_acerto && p.taxa_acerto > 0)
         .sort((a, b) => (b.taxa_acerto || 0) - (a.taxa_acerto || 0))
         .slice(0, 10);
@@ -174,13 +276,13 @@ serve(async (req) => {
       // Preparar contexto enriquecido para a IA
       const contexto = {
         resultadosRecentes: (resultados || []).slice(0, 50),
-        padroesAprendidos: padroes || [],
+        padroesAprendidos: todosPadroes || [],
         historicoPrevisoes: previsoes || [],
         metricas: metricas || { taxa_acerto: 0, total_acertos: 0 },
         horarioSolicitado: data.horario,
         modalidade: data.modalidade,
         digitos: data.digitos,
-        // Novas análises
+        // Novas análises com scores ponderados
         analiseAvancada: {
           sequenciasFrequentes: analiseSequencias.sequencias,
           gruposAtrasados,
@@ -188,7 +290,14 @@ serve(async (req) => {
           correlacaoHorario: correlacaoHorario[data.horario] || [],
           tendenciaHoje: tendenciaSemanal[new Date().getDay()] || [],
           ultimoGrupoSaiu: ultimoGrupo,
-          metodosQueAcertam: metodosQueAcertam.map(m => ({ tipo: m.tipo, valor: m.valor, taxa: m.taxa_acerto }))
+          penultimoGrupoSaiu: penultimoGrupo,
+          metodosQueAcertam: metodosQueAcertam.map(m => ({ tipo: m.tipo, valor: m.valor, taxa: m.taxa_acerto })),
+          gruposRankeados, // TOP grupos por score ponderado
+          gruposQuentes,
+          gruposFrios,
+          gruposParaEsteHorario,
+          gruposParaHoje,
+          gruposComMaiorTaxa
         }
       };
 
@@ -213,65 +322,78 @@ REGRAS DO JOGO:
 - Grupo 1 (Avestruz): 01-04, Grupo 2 (Águia): 05-08... até Grupo 25 (Vaca): 97-00
 - A dezena 00 pertence ao grupo 25
 
-MÉTODOS AVANÇADOS DE ANÁLISE:
-1. **Análise de Sequências**: Identificar padrões de grupos que saem em sequência
-2. **Grupos Atrasados**: Grupos que estão há muito tempo sem sair tendem a aparecer
-3. **Correlação Horário**: Cada horário tem grupos que aparecem mais
-4. **Transição de Grupos**: Após o grupo X, qual grupo Y tende a sair?
-5. **Ciclos Semanais**: Padrões que se repetem em dias específicos
-6. **Peso Dinâmico**: Métodos que acertaram mais recebem mais peso
-7. **Frequência Recente vs Histórica**: Balancear tendências recentes com padrões de longo prazo
+SISTEMA DE APRENDIZADO ATIVO:
+Você tem acesso a padrões aprendidos com taxas de acerto calculadas dinamicamente. USE esses dados!
 
-PRIORIDADES:
-1. GRUPOS ATRASADOS têm alta probabilidade de sair
-2. SEQUÊNCIAS que se repetem são fortes indicadores
-3. HORÁRIO específico tem grupos preferenciais
-4. Último grupo que saiu indica próximos prováveis
+PRIORIDADES DE ANÁLISE (EM ORDEM):
+1. **GRUPOS RANKEADOS POR SCORE**: Score calculado com peso de múltiplos fatores - USE COMO BASE PRINCIPAL
+2. **GRUPOS PARA ESTE HORÁRIO**: Padrões aprendidos para o horário ${data.horario} - PESO ALTO
+3. **GRUPOS ATRASADOS**: Há muito tempo sem sair, probabilidade crescente
+4. **SEQUÊNCIA APÓS ÚLTIMO GRUPO**: O que costuma sair depois do grupo que acabou de sair
+5. **GRUPOS QUENTES**: Alta frequência recente (momentum)
+6. **TENDÊNCIA DO DIA**: Padrões que se repetem neste dia da semana
+7. **PADRÕES COM MAIOR TAXA DE ACERTO**: Métodos que historicamente mais funcionaram
+
+IMPORTANTE:
+- Priorize os grupos com maior SCORE (já calculados combinando todos os fatores)
+- Gere números que pertençam aos grupos recomendados
+- Para cada grupo, as dezenas são: (grupo-1)*4 + 1 até grupo*4 (ex: grupo 5 = 17,18,19,20)
 
 FORMATO DA RESPOSTA (JSON OBRIGATÓRIO):
 {
-  "numeros": ["array de strings com ${data.digitos} dígitos cada"],
-  "grupos": [números inteiros dos grupos recomendados],
-  "confianca": número de 1-100,
-  "explicacao": "análise detalhada dos padrões encontrados",
-  "padroesIdentificados": ["lista de padrões usados"],
+  "numeros": ["array de strings com ${data.digitos} dígitos cada - gere 5 números"],
+  "grupos": [números inteiros dos grupos recomendados - use os TOP 5 do ranking],
+  "confianca": número de 1-100 baseado na qualidade dos padrões,
+  "explicacao": "análise detalhada dos padrões encontrados e por que escolheu esses números",
+  "padroesIdentificados": ["lista de padrões que usou na análise"],
   "gruposQuentes": [grupos com alta frequência recente],
   "gruposFrios": [grupos atrasados que podem sair],
-  "recomendacaoEspecial": "dica principal baseada nos dados"
+  "recomendacaoEspecial": "dica principal baseada nos dados mais fortes"
 }`
             },
             {
               role: "user",
               content: `ANÁLISE PARA ${data.digitos} DÍGITOS - HORÁRIO ${data.horario}
 
-📊 DADOS ESTATÍSTICOS:
-- Total de resultados analisados: ${contexto.resultadosRecentes.length}
-- Taxa de acerto atual: ${contexto.metricas.taxa_acerto?.toFixed(1) || 0}%
-- Total de acertos: ${contexto.metricas.total_acertos || 0}
+📊 ESTATÍSTICAS DO APRENDIZADO:
+- Total de resultados analisados: ${(resultados || []).length}
+- Taxa de acerto da IA: ${contexto.metricas.taxa_acerto?.toFixed(1) || 0}%
+- Total de acertos registrados: ${contexto.metricas.total_acertos || 0}
 
-🎯 ÚLTIMO RESULTADO:
-- Grupo: ${contexto.analiseAvancada.ultimoGrupoSaiu || "N/A"}
-- Grupos que costumam sair após este: ${JSON.stringify(contexto.analiseAvancada.gruposProvaveis)}
+🏆 TOP GRUPOS POR SCORE PONDERADO (USE ESTES!):
+${JSON.stringify(contexto.analiseAvancada.gruposRankeados, null, 2)}
 
-⏰ CORRELAÇÃO COM HORÁRIO ${data.horario}:
-${JSON.stringify(contexto.analiseAvancada.correlacaoHorario, null, 2)}
+⏰ PADRÕES APRENDIDOS PARA HORÁRIO ${data.horario}:
+${JSON.stringify(contexto.analiseAvancada.gruposParaEsteHorario, null, 2)}
 
-📈 TENDÊNCIA PARA HOJE (dia ${new Date().getDay()}):
-Grupos favoritos: ${JSON.stringify(contexto.analiseAvancada.tendenciaHoje)}
+📅 PADRÕES PARA HOJE (${['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][new Date().getDay()]}):
+${JSON.stringify(contexto.analiseAvancada.gruposParaHoje, null, 2)}
 
-🔥 GRUPOS ATRASADOS (alta probabilidade):
+🎯 TRANSIÇÃO DE GRUPOS:
+- Último grupo: ${contexto.analiseAvancada.ultimoGrupoSaiu || "N/A"}
+- Penúltimo grupo: ${contexto.analiseAvancada.penultimoGrupoSaiu || "N/A"}
+- Grupos prováveis após ${contexto.analiseAvancada.ultimoGrupoSaiu}: ${JSON.stringify(contexto.analiseAvancada.gruposProvaveis)}
+
+🔥 GRUPOS QUENTES (momentum):
+${JSON.stringify(contexto.analiseAvancada.gruposQuentes, null, 2)}
+
+❄️ GRUPOS FRIOS/ATRASADOS (alta probabilidade):
 ${JSON.stringify(contexto.analiseAvancada.gruposAtrasados, null, 2)}
 
-🔄 SEQUÊNCIAS MAIS FREQUENTES:
+📈 PADRÕES COM MAIOR TAXA DE ACERTO HISTÓRICO:
+${JSON.stringify(contexto.analiseAvancada.gruposComMaiorTaxa, null, 2)}
+
+🔄 SEQUÊNCIAS MAIS FREQUENTES (3 grupos consecutivos):
 ${JSON.stringify(contexto.analiseAvancada.sequenciasFrequentes.slice(0, 5), null, 2)}
 
-📚 PADRÕES COM MAIOR TAXA DE ACERTO:
-${JSON.stringify(contexto.analiseAvancada.metodosQueAcertam, null, 2)}
+ÚLTIMOS 15 RESULTADOS:
+${JSON.stringify(contexto.resultadosRecentes.slice(0, 15).map(r => ({ grupo: r.grupo, horario: r.horario, dezena: r.dezena, animal: r.animal })), null, 2)}
 
-ÚLTIMOS 20 RESULTADOS:
-${JSON.stringify(contexto.resultadosRecentes.slice(0, 20).map(r => ({ g: r.grupo, h: r.horario, d: r.dezena })), null, 2)}
-
-Gere 5 números otimizados priorizando: grupos atrasados + correlação de horário + sequências frequentes.`
+INSTRUÇÕES FINAIS:
+1. USE os grupos do ranking como base principal
+2. Gere 5 números de ${data.digitos} dígitos que pertençam aos grupos recomendados
+3. Priorize: Score alto > Correlação horário > Atrasados > Sequências
+4. Explique sua análise de forma clara`
             }
           ],
         }),
