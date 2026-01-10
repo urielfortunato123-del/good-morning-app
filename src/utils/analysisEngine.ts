@@ -34,12 +34,13 @@ const seededRandom = (seed: number): () => number => {
   };
 };
 
-// Criar seed baseada na data, horário e minuto atual (muda a cada minuto)
-const createSeed = (data?: string, horario?: string): number => {
+// Criar seed baseada na data, horário, minuto e categoria (digitos) - cada categoria gera números diferentes
+const createSeed = (data?: string, horario?: string, digitos?: number): number => {
   const now = new Date();
   const dataStr = data || now.toISOString().split('T')[0];
   const horaStr = horario || `${now.getHours()}:${now.getMinutes()}`;
-  const seedString = `${dataStr}-${horaStr}-${now.getMinutes()}`;
+  // Incluir digitos na seed para gerar números diferentes por categoria
+  const seedString = `${dataStr}-${horaStr}-${now.getMinutes()}-digitos${digitos || 2}`;
   
   let hash = 0;
   for (let i = 0; i < seedString.length; i++) {
@@ -204,8 +205,8 @@ export interface AnalysisResult {
 
 // Função principal: Canal Magnético - combina TODOS os métodos
 export const generateCanalMagnetico = (digitos: number, horarioSelecionado?: string, dataSelecionada?: string): AnalysisResult => {
-  // Inicializar gerador de números baseado na data e horário selecionados
-  const seed = createSeed(dataSelecionada, horarioSelecionado);
+  // Inicializar gerador de números baseado na data, horário e categoria (digitos)
+  const seed = createSeed(dataSelecionada, horarioSelecionado, digitos);
   currentRandom = seededRandom(seed);
   
   const now = dataSelecionada ? new Date(dataSelecionada) : new Date();
