@@ -345,22 +345,44 @@ export const generateCanalMagnetico = (digitos: number, horarioSelecionado?: str
     });
   }
   
-  // Ordenar por peso e pegar os top 3-5
-  const numerosOrdenados = [...todosNumeros.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([num]) => num);
-  
-  // Pegar os top números com maior convergência
-  let numerosFinais = numerosOrdenados.slice(0, 5);
-  
+  // Seleção final: amostragem ponderada (evita ficar preso sempre nos mesmos top 5)
+  const entriesOrdenadas = [...todosNumeros.entries()].sort((a, b) => b[1] - a[1]);
+  const pool = entriesOrdenadas.slice(0, 40); // limita para manter relevância
+
+  const pickWeightedUnique = (entries: Array<[string, number]>, count: number): string[] => {
+    const picked: string[] = [];
+    const used = new Set<string>();
+
+    for (let i = 0; i < count && entries.length > 0; i++) {
+      const available = entries.filter(([n]) => !used.has(n));
+      if (available.length === 0) break;
+
+      const totalWeight = available.reduce((acc, [, w]) => acc + Math.max(w, 0.01), 0);
+      let r = currentRandom() * totalWeight;
+
+      for (const [n, w] of available) {
+        r -= Math.max(w, 0.01);
+        if (r <= 0) {
+          used.add(n);
+          picked.push(n);
+          break;
+        }
+      }
+    }
+
+    return picked;
+  };
+
+  let numerosFinais = pickWeightedUnique(pool, 5);
+
   // Formatar corretamente
   numerosFinais = numerosFinais.map(n => {
     if (digitos === 2) return n.slice(-2).padStart(2, '0');
     if (digitos === 3) return n.slice(-3).padStart(3, '0');
     return n.slice(-4).padStart(4, '0');
   });
-  
-  // Remover duplicatas
+
+  // Remover duplicatas (por segurança) e garantir tamanho
   numerosFinais = [...new Set(numerosFinais)].slice(0, 5);
   
   // Encontrar grupo do número principal
@@ -378,7 +400,18 @@ export const generateCanalMagnetico = (digitos: number, horarioSelecionado?: str
   });
   
   // Calcular confiança baseada na convergência
-  const pesoMaximo = todosNumeros.get(numerosFinais[0]) || 1;
+  const formatKey = (n: string): string => {
+    if (digitos === 2) return n.slice(-2).padStart(2, '0');
+    if (digitos === 3) return n.slice(-3).padStart(3, '0');
+    return n.slice(-4).padStart(4, '0');
+  };
+
+  const pesoMaximo = Math.max(
+    1,
+    ...pool
+      .filter(([raw]) => formatKey(raw) === (numerosFinais[0] || ''))
+      .map(([, w]) => w)
+  );
   const confianca = Math.min(75 + Math.floor(pesoMaximo * 2), 98);
   
   const metodosUsados = usouAcertosHistoricos
