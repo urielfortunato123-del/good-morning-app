@@ -1,3 +1,11 @@
+// Emojis para cada animal
+export const ANIMAIS_EMOJI: Record<number, string> = {
+  1: "🦢", 2: "🦅", 3: "🫏", 4: "🦋", 5: "🐕", 6: "🐐", 7: "🐏", 8: "🐫",
+  9: "🐍", 10: "🐇", 11: "🐴", 12: "🐘", 13: "🐓", 14: "🐱", 15: "🐊",
+  16: "🦁", 17: "🐒", 18: "🐷", 19: "🦚", 20: "🦃", 21: "🐂", 22: "🐅",
+  23: "🐻", 24: "🦌", 25: "🐄"
+};
+
 export const ANIMAIS = [
   { grupo: 1, nome: "Avestruz", numeros: ["01", "02", "03", "04"] },
   { grupo: 2, nome: "Águia", numeros: ["05", "06", "07", "08"] },
@@ -26,18 +34,74 @@ export const ANIMAIS = [
   { grupo: 25, nome: "Vaca", numeros: ["97", "98", "99", "00"] },
 ];
 
+// Multiplicadores REAIS do jogo do bicho
 export const MODALIDADES = [
-  { id: "milhar", nome: "Milhar", multiplicador: "9000x", digitos: 4 },
-  { id: "milhar-centena", nome: "Milhar Centena", multiplicador: "9000x", digitos: 4 },
-  { id: "centena", nome: "Centena", multiplicador: "900x", digitos: 3 },
-  { id: "dezena", nome: "Dezena", multiplicador: "90x", digitos: 2 },
-  { id: "grupo", nome: "Grupo", multiplicador: "23x", digitos: 2 },
-  { id: "duque-dezena", nome: "Duque Dezena", multiplicador: "300x", digitos: 2 },
-  { id: "terno-dezena", nome: "Terno de Dezena", multiplicador: "13000x", digitos: 2 },
-  { id: "terno-grupo", nome: "Terno de Grupo", multiplicador: "250x", digitos: 2 },
-  { id: "duque-grupo", nome: "Duque de Grupo", multiplicador: "20x", digitos: 2 },
-  { id: "palpito", nome: "Palpitão", multiplicador: "800x", digitos: 4 },
+  { id: "milhar", nome: "Milhar", multiplicador: "4000x", digitos: 4, descricao: "Acertar os 4 dígitos no 1º prêmio" },
+  { id: "milhar-centena", nome: "Milhar Centena", multiplicador: "4000x", digitos: 4, descricao: "Milhar em qualquer posição" },
+  { id: "centena", nome: "Centena", multiplicador: "600x", digitos: 3, descricao: "Acertar os 3 últimos dígitos" },
+  { id: "dezena", nome: "Dezena", multiplicador: "60x", digitos: 2, descricao: "Acertar os 2 últimos dígitos" },
+  { id: "grupo", nome: "Grupo", multiplicador: "18x", digitos: 2, descricao: "Acertar o animal/grupo" },
+  { id: "duque-dezena", nome: "Duque Dezena", multiplicador: "300x", digitos: 2, descricao: "2 dezenas em 5 prêmios" },
+  { id: "terno-dezena", nome: "Terno de Dezena", multiplicador: "3000x", digitos: 2, descricao: "3 dezenas em 5 prêmios" },
+  { id: "terno-grupo", nome: "Terno de Grupo", multiplicador: "130x", digitos: 2, descricao: "3 grupos em 5 prêmios" },
+  { id: "duque-grupo", nome: "Duque de Grupo", multiplicador: "18.5x", digitos: 2, descricao: "2 grupos em 5 prêmios" },
+  { id: "palpitao", nome: "Palpitão", multiplicador: "800x", digitos: 4, descricao: "Milhar cercada" },
 ];
+
+// Tabela tradicional de sonhos → animais (baseada no Livro de São Cipriano)
+// Chaves duplicadas removidas - cada palavra aponta para um ou mais grupos
+export const SONHOS_ANIMAIS: Record<string, number[]> = {
+  // Grupo 1 - Avestruz
+  "aliança": [1], "mesa": [1], "pérola": [1], "anel": [1], "noiva": [1], "noivo": [1],
+  // Grupo 2 - Águia
+  "briga": [2], "palhaço": [2], "uva": [2], "voo": [2], "altura": [2], "circo": [2],
+  // Grupo 3 - Burro
+  "abrigo": [3], "proteção": [3], "livro": [3], "estudo": [3], "escola": [3], "biblioteca": [3],
+  // Grupo 4 - Borboleta
+  "criança": [4], "crianças": [4], "jardim": [4], "lua": [4], "montanha": [4], "flores": [4, 20],
+  // Grupo 5 - Cachorro
+  "bruxa": [5], "deus": [5], "raio": [5], "sombra": [5], "trovão": [5], "tempestade": [5], "feitiço": [5],
+  // Grupo 6 - Cabra
+  "escuridão": [6], "bebê": [6], "sol": [6], "recém-nascido": [6], "parto": [6, 24],
+  // Grupo 7 - Carneiro
+  "janela": [7], "lâmpada": [7], "moeda": [7], "ovo": [7], "ouro": [7],
+  // Grupo 8 - Camelo
+  "amigo": [8], "escada": [8], "homem": [8], "lápis": [8], "pirâmide": [8], "deserto": [8], "viagem": [8],
+  // Grupo 9 - Cobra
+  "igreja": [9], "mar": [9], "noite": [9], "ponte": [9], "seios": [9], "veneno": [9],
+  // Grupo 10 - Coelho
+  "beijo": [10], "pedra": [10], "amor": [10], "namorado": [10], "namorada": [10], "paixão": [10],
+  // Grupo 11 - Cavalo
+  "nudez": [11], "sapato": [11], "corrida": [11], "velocidade": [11], "nu": [11], "nua": [11],
+  // Grupo 12 - Elefante
+  "anjo": [12], "sangue": [12], "força": [12], "grande": [12], "gigante": [12], "memória": [12],
+  // Grupo 13 - Galo
+  "cafuné": [13], "defunto": [13], "morte": [13], "faca": [13], "muro": [13], "óculos": [13], "enterro": [13],
+  // Grupo 14 - Gato
+  "medo": [14], "nuvem": [14], "sal": [14], "vermelho": [14], "susto": [14], "grito": [14], "aranha": [14],
+  // Grupo 15 - Jacaré
+  "ilha": [15], "umbigo": [15], "água": [15], "pantano": [15], "lagoa": [15],
+  // Grupo 16 - Leão
+  "acidente": [16], "máscara": [16], "pé": [16], "coroa": [16], "poder": [16],
+  // Grupo 17 - Macaco
+  "pedra preciosa": [17], "jóia": [17], "diamante": [17], "roubo": [17], "ladrão": [17], "banana": [17],
+  // Grupo 18 - Porco
+  "casamento": [18, 1], "lago": [18], "mãe": [18], "lama": [18], "comida": [18], "festa": [18],
+  // Grupo 19 - Pavão
+  "casa": [19], "fogo": [19], "ninho": [19], "pão": [19], "rio": [19, 15], "beleza": [19], "vaidade": [19],
+  // Grupo 20 - Peru
+  "dinheiro": [20, 7], "flor": [20, 4], "neve": [20], "olhos": [20], "remédio": [20], "farmácia": [20],
+  // Grupo 21 - Touro
+  "carnaval": [21], "filhos": [21], "relógio": [21], "tempo": [21], "hora": [21],
+  // Grupo 22 - Tigre
+  "fantasma": [22], "navio": [22], "orelha": [22], "praia": [22], "rei": [22, 16], "barco": [22],
+  // Grupo 23 - Urso
+  "adultério": [23], "naufrágio": [23], "pai": [23], "queda": [23], "vulcão": [23], "cair": [23], "traição": [23, 9],
+  // Grupo 24 - Veado
+  "exército": [24], "hospital": [24], "nascimento": [24], "quartel": [24], "soldado": [24], "médico": [24],
+  // Grupo 25 - Vaca
+  "espelho": [25], "estrela": [25], "onda": [25], "quadro": [25], "leite": [25, 11], "fazenda": [25, 21],
+};
 
 export const METODOS_ANALISE = [
   {

@@ -9,6 +9,8 @@ import { CoinAnimation } from "@/components/CoinAnimation";
 import HistoricoAcertos from "@/components/HistoricoAcertos";
 import PainelQuantico from "@/components/PainelQuantico";
 import AlertasQuanticos from "@/components/AlertasQuanticos";
+import ConsultaSonhos from "@/components/ConsultaSonhos";
+import TabelaAnimais from "@/components/TabelaAnimais";
 import { generateCanalMagnetico, AnalysisResult } from "@/utils/analysisEngine";
 import { useInteligenciaQuantica, AnaliseQuantica } from "@/hooks/useInteligenciaQuantica";
 import { MODALIDADES } from "@/data/bichoData";
@@ -119,23 +121,29 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="oraculo" className="w-full">
-            <TabsList className="grid w-full grid-cols-6 mb-6 bg-card/50 border border-gold/10">
-              <TabsTrigger value="oraculo" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 mb-6 bg-card/50 border border-gold/10">
+              <TabsTrigger value="oraculo" className="font-cinzel text-xs data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🔮 Oráculo
               </TabsTrigger>
-              <TabsTrigger value="quantico" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+              <TabsTrigger value="quantico" className="font-cinzel text-xs data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
                 🧠 IA
               </TabsTrigger>
-              <TabsTrigger value="alertas" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400">
+              <TabsTrigger value="alertas" className="font-cinzel text-xs data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400">
                 🔔 Alertas
               </TabsTrigger>
-              <TabsTrigger value="acertos" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+              <TabsTrigger value="sonhos" className="font-cinzel text-xs data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400">
+                🌙 Sonhos
+              </TabsTrigger>
+              <TabsTrigger value="tabela" className="font-cinzel text-xs data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+                🎰 Bichos
+              </TabsTrigger>
+              <TabsTrigger value="acertos" className="font-cinzel text-xs data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🏆 Acertos
               </TabsTrigger>
-              <TabsTrigger value="cipriano" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+              <TabsTrigger value="cipriano" className="font-cinzel text-xs data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 📖 Cipriano
               </TabsTrigger>
-              <TabsTrigger value="cadastro" className="font-cinzel text-xs md:text-sm data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+              <TabsTrigger value="cadastro" className="font-cinzel text-xs data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 📝 Cadastrar
               </TabsTrigger>
             </TabsList>
@@ -306,6 +314,18 @@ const Index = () => {
 
             <TabsContent value="alertas">
               <AlertasQuanticos />
+            </TabsContent>
+
+            <TabsContent value="sonhos">
+              <div className="p-6 rounded-2xl bg-card/50 border border-purple-500/20 backdrop-blur-sm">
+                <ConsultaSonhos />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="tabela">
+              <div className="p-6 rounded-2xl bg-card/50 border border-gold/20 backdrop-blur-sm">
+                <TabelaAnimais />
+              </div>
             </TabsContent>
 
             <TabsContent value="acertos">
