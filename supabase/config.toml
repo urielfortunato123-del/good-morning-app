@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.scrape-resultados]
 verify_jwt = false
+
+[functions.analisar-padroes]
+verify_jwt = false
