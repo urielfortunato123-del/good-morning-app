@@ -11,6 +11,7 @@ import PainelQuantico from "@/components/PainelQuantico";
 import AlertasQuanticos from "@/components/AlertasQuanticos";
 import ConsultaSonhos from "@/components/ConsultaSonhos";
 import TabelaAnimais from "@/components/TabelaAnimais";
+import Curiosidades from "@/components/Curiosidades";
 import { generateCanalMagnetico, AnalysisResult } from "@/utils/analysisEngine";
 import { useInteligenciaQuantica, AnaliseQuantica } from "@/hooks/useInteligenciaQuantica";
 import { MODALIDADES } from "@/data/bichoData";
@@ -121,7 +122,7 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="oraculo" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 mb-6 bg-card/50 border border-gold/10">
+            <TabsList className="grid w-full grid-cols-5 md:grid-cols-9 mb-6 bg-card/50 border border-gold/10">
               <TabsTrigger value="oraculo" className="font-cinzel text-xs data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🔮 Oráculo
               </TabsTrigger>
@@ -136,6 +137,9 @@ const Index = () => {
               </TabsTrigger>
               <TabsTrigger value="tabela" className="font-cinzel text-xs data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🎰 Bichos
+              </TabsTrigger>
+              <TabsTrigger value="historia" className="font-cinzel text-xs data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400">
+                📚 História
               </TabsTrigger>
               <TabsTrigger value="acertos" className="font-cinzel text-xs data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                 🏆 Acertos
@@ -325,6 +329,12 @@ const Index = () => {
             <TabsContent value="tabela">
               <div className="p-6 rounded-2xl bg-card/50 border border-gold/20 backdrop-blur-sm">
                 <TabelaAnimais />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="historia">
+              <div className="p-6 rounded-2xl bg-card/50 border border-amber-500/20 backdrop-blur-sm">
+                <Curiosidades />
               </div>
             </TabsContent>
 
