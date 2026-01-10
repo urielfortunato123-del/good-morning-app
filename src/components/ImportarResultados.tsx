@@ -4,10 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Loader2, Globe, Calendar, Database } from 'lucide-react';
+import { Download, Loader2, Globe, Calendar, CloudUpload, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useResultadosHistoricos } from '@/hooks/useResultadosHistoricos';
 
 const UFS = ['RJ', 'SP', 'MG', 'BA', 'RS', 'PR', 'PE', 'CE', 'GO', 'PA'];
 
@@ -18,12 +16,13 @@ export const ImportarResultados = () => {
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [loading, setLoading] = useState(false);
+  const [salvando, setSalvando] = useState(false);
   const [resultados, setResultados] = useState<any[]>([]);
-  
-  const { salvarResultado } = useResultadosHistoricos();
+  const [salvosNoBanco, setSalvosNoBanco] = useState(false);
 
   const buscarResultados = async () => {
     setLoading(true);
+    setSalvosNoBanco(false);
     try {
       let params = new URLSearchParams({ uf, mode: modo });
       
@@ -34,18 +33,8 @@ export const ImportarResultados = () => {
         params.append('end', dataFim);
       }
 
-      const { data: response, error } = await supabase.functions.invoke('scrape-resultados', {
-        body: null,
-        method: 'GET',
-      });
-
-      // Use fetch diretamente para passar query params
       const url = `https://qtwfsoslzqghxpnjvowf.supabase.co/functions/v1/scrape-resultados?${params.toString()}`;
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
-        }
-      });
+      const res = await fetch(url);
 
       if (!res.ok) {
         const err = await res.json();
@@ -69,22 +58,36 @@ export const ImportarResultados = () => {
     }
   };
 
-  const salvarTodos = () => {
-    let salvos = 0;
-    resultados.forEach(r => {
-      try {
-        salvarResultado({
-          data: r.data,
-          horario: r.hora,
-          premio: r.premio,
-          milhar: r.milhar,
-        });
-        salvos++;
-      } catch (e) {
-        console.error('Erro ao salvar:', e);
+  const salvarNoBanco = async () => {
+    if (resultados.length === 0) return;
+    
+    setSalvando(true);
+    try {
+      let params = new URLSearchParams({ uf, mode: modo, save: 'true' });
+      
+      if (modo === 'single' && data) {
+        params.append('start', data);
+      } else if (modo === 'range' && dataInicio && dataFim) {
+        params.append('start', dataInicio);
+        params.append('end', dataFim);
       }
-    });
-    toast.success(`${salvos} resultados salvos no histórico local!`);
+
+      const url = `https://qtwfsoslzqghxpnjvowf.supabase.co/functions/v1/scrape-resultados?${params.toString()}`;
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao salvar');
+      }
+
+      setSalvosNoBanco(true);
+      toast.success(`${resultados.length} resultados salvos no banco! A IA agora pode aprender com esses dados.`);
+    } catch (err: any) {
+      console.error('Erro ao salvar:', err);
+      toast.error(err.message || 'Erro ao salvar no banco');
+    } finally {
+      setSalvando(false);
+    }
   };
 
   const exportarCSV = () => {
@@ -113,8 +116,11 @@ export const ImportarResultados = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Globe className="h-5 w-5 text-primary" />
-            Importar Resultados Online
+            Importar Resultados para IA Aprender
           </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Importe dados históricos do site para o banco de dados. A IA usará esses dados para identificar padrões.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -186,7 +192,7 @@ export const ImportarResultados = () => {
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Buscando...
+                Buscando no site...
               </>
             ) : (
               <>
@@ -202,22 +208,42 @@ export const ImportarResultados = () => {
         <Card className="bg-gradient-to-br from-background/95 to-accent/5 border-accent/20">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span className="text-lg">
+              <span className="text-lg flex items-center gap-2">
                 {resultados.length} Resultados Encontrados
+                {salvosNoBanco && <CheckCircle className="h-5 w-5 text-green-500" />}
               </span>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={exportarCSV}>
                   <Download className="h-4 w-4 mr-1" />
                   CSV
                 </Button>
-                <Button size="sm" onClick={salvarTodos}>
-                  <Database className="h-4 w-4 mr-1" />
-                  Salvar Local
-                </Button>
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={salvarNoBanco} 
+              disabled={salvando || salvosNoBanco}
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+            >
+              {salvando ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Salvando no banco...
+                </>
+              ) : salvosNoBanco ? (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Salvo! IA pode aprender
+                </>
+              ) : (
+                <>
+                  <CloudUpload className="h-4 w-4 mr-2" />
+                  Salvar no Banco para IA Aprender
+                </>
+              )}
+            </Button>
+
             <div className="max-h-64 overflow-auto">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-background">
