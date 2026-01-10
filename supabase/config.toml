@@ -1,1 +1,7 @@
 project_id = "qtwfsoslzqghxpnjvowf"
+
+[functions.inteligencia-quantica]
+verify_jwt = false
+
+[functions.scrape-resultados]
+verify_jwt = false
