@@ -25,6 +25,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [modalidade, setModalidade] = useState<string | null>(null);
   const [data, setData] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [dataManual, setDataManual] = useState(false);
   const [horario, setHorario] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [analiseQuantica, setAnaliseQuantica] = useState<AnaliseQuantica | null>(null);
@@ -42,6 +43,23 @@ const Index = () => {
       navigate("/onboarding");
     }
   }, [navigate]);
+
+  // Se o app ficou aberto de um dia pro outro, atualiza a data automaticamente
+  useEffect(() => {
+    const syncTodayIfNeeded = () => {
+      if (dataManual) return;
+      const today = new Date().toISOString().split('T')[0];
+      setData(prev => (prev === today ? prev : today));
+    };
+
+    syncTodayIfNeeded();
+    window.addEventListener('focus', syncTodayIfNeeded);
+    document.addEventListener('visibilitychange', syncTodayIfNeeded);
+    return () => {
+      window.removeEventListener('focus', syncTodayIfNeeded);
+      document.removeEventListener('visibilitychange', syncTodayIfNeeded);
+    };
+  }, [dataManual]);
 
   const handleGenerate = async () => {
     if (!modalidade || !horario) return;
@@ -178,7 +196,10 @@ const Index = () => {
                       <input
                         type="date"
                         value={data}
-                        onChange={(e) => setData(e.target.value)}
+                        onChange={(e) => {
+                          setDataManual(true);
+                          setData(e.target.value);
+                        }}
                         className="w-full px-3 py-2 rounded-md bg-background/50 border border-gold/30 font-cormorant text-foreground focus:border-gold/60 focus:outline-none hover:border-gold/50 transition-colors"
                       />
                     </div>
