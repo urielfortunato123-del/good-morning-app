@@ -80,7 +80,8 @@ const Index = () => {
       // Usar Canal Magnético tradicional
       setLoading(true);
       await new Promise(resolve => setTimeout(resolve, 2000));
-      const analysisResult = generateCanalMagnetico(digitos, horario.replace(":", "h").slice(0, 2) + "h");
+      const horarioFormatado = horario.replace(":", "h").slice(0, 2) + "h";
+      const analysisResult = generateCanalMagnetico(digitos, horarioFormatado, data);
       setResult(analysisResult);
       setHistory(prev => [analysisResult, ...prev.slice(0, 4)]);
       setLoading(false);
