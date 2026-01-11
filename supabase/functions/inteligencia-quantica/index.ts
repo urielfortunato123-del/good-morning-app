@@ -312,6 +312,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
+          temperature: 0.9, // Adiciona variação nas respostas
           messages: [
             {
               role: "system",
@@ -338,10 +339,12 @@ IMPORTANTE:
 - Priorize os grupos com maior SCORE (já calculados combinando todos os fatores)
 - Gere números que pertençam aos grupos recomendados
 - Para cada grupo, as dezenas são: (grupo-1)*4 + 1 até grupo*4 (ex: grupo 5 = 17,18,19,20)
+- CADA REQUISIÇÃO É ÚNICA - gere números DIFERENTES a cada chamada
+- Varie entre grupos de alta pontuação para diversificar
 
 FORMATO DA RESPOSTA (JSON OBRIGATÓRIO):
 {
-  "numeros": ["array de strings com ${data.digitos} dígitos cada - gere 5 números"],
+  "numeros": ["array de strings com ${data.digitos} dígitos cada - gere 5 números ÚNICOS"],
   "grupos": [números inteiros dos grupos recomendados - use os TOP 5 do ranking],
   "confianca": número de 1-100 baseado na qualidade dos padrões,
   "explicacao": "análise detalhada dos padrões encontrados e por que escolheu esses números",
@@ -353,7 +356,10 @@ FORMATO DA RESPOSTA (JSON OBRIGATÓRIO):
             },
             {
               role: "user",
-              content: `ANÁLISE PARA ${data.digitos} DÍGITOS - HORÁRIO ${data.horario}
+              content: `🆔 REQUISIÇÃO ÚNICA: ${Date.now()}-${Math.random().toString(36).slice(2)}
+
+ANÁLISE PARA ${data.digitos} DÍGITOS - HORÁRIO ${data.horario}
+⏱️ Hora atual: ${new Date().toLocaleTimeString('pt-BR')}
 
 📊 ESTATÍSTICAS DO APRENDIZADO:
 - Total de resultados analisados: ${(resultados || []).length}
@@ -386,14 +392,18 @@ ${JSON.stringify(contexto.analiseAvancada.gruposComMaiorTaxa, null, 2)}
 🔄 SEQUÊNCIAS MAIS FREQUENTES (3 grupos consecutivos):
 ${JSON.stringify(contexto.analiseAvancada.sequenciasFrequentes.slice(0, 5), null, 2)}
 
+🎲 SEMENTE ALEATÓRIA: ${Math.floor(Math.random() * 1000000)}
+Use para variar a seleção entre os grupos de alta pontuação!
+
 ÚLTIMOS 15 RESULTADOS:
 ${JSON.stringify(contexto.resultadosRecentes.slice(0, 15).map(r => ({ grupo: r.grupo, horario: r.horario, dezena: r.dezena, animal: r.animal })), null, 2)}
 
 INSTRUÇÕES FINAIS:
 1. USE os grupos do ranking como base principal
-2. Gere 5 números de ${data.digitos} dígitos que pertençam aos grupos recomendados
-3. Priorize: Score alto > Correlação horário > Atrasados > Sequências
-4. Explique sua análise de forma clara`
+2. Gere 5 números de ${data.digitos} dígitos DIFERENTES de requisições anteriores
+3. VARIE: escolha diferentes combinações dos grupos de alta pontuação
+4. Priorize: Score alto > Correlação horário > Atrasados > Sequências
+5. Explique sua análise de forma clara`
             }
           ],
         }),
