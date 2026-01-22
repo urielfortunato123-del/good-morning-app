@@ -34,13 +34,15 @@ const seededRandom = (seed: number): () => number => {
   };
 };
 
-// Criar seed baseada na data, horário, minuto e categoria (digitos) - cada categoria gera números diferentes
+// Criar seed VERDADEIRAMENTE ÚNICA para cada geração
+// Inclui timestamp em milissegundos + random para garantir unicidade
 const createSeed = (data?: string, horario?: string, digitos?: number): number => {
   const now = new Date();
   const dataStr = data || now.toISOString().split('T')[0];
   const horaStr = horario || `${now.getHours()}:${now.getMinutes()}`;
-  // Incluir digitos na seed para gerar números diferentes por categoria
-  const seedString = `${dataStr}-${horaStr}-${now.getMinutes()}-digitos${digitos || 2}`;
+  // CRÍTICO: Incluir timestamp em ms + random para NUNCA repetir
+  const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2)}-${performance.now()}`;
+  const seedString = `${dataStr}-${horaStr}-digitos${digitos || 2}-${uniqueId}`;
   
   let hash = 0;
   for (let i = 0; i < seedString.length; i++) {
