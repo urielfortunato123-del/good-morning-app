@@ -212,12 +212,40 @@ export type Database = {
         }
         Relationships: []
       }
+      uso_diario: {
+        Row: {
+          created_at: string
+          data: string
+          geracoes: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          geracoes?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          geracoes?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       usuarios_autorizados: {
         Row: {
           autorizado: boolean
           created_at: string
           data_autorizacao: string | null
           data_expiracao: string | null
+          data_inicio: string | null
           email: string
           id: string
           observacoes: string | null
@@ -229,6 +257,7 @@ export type Database = {
           created_at?: string
           data_autorizacao?: string | null
           data_expiracao?: string | null
+          data_inicio?: string | null
           email: string
           id?: string
           observacoes?: string | null
@@ -240,6 +269,7 @@ export type Database = {
           created_at?: string
           data_autorizacao?: string | null
           data_expiracao?: string | null
+          data_inicio?: string | null
           email?: string
           id?: string
           observacoes?: string | null

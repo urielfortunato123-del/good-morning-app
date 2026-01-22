@@ -14,13 +14,18 @@ import TabelaAnimais from "@/components/TabelaAnimais";
 import Curiosidades from "@/components/Curiosidades";
 import { ImportarResultados } from "@/components/ImportarResultados";
 import { MotorAprendizado } from "@/components/MotorAprendizado";
+import { AssinaturaBadge } from "@/components/AssinaturaBadge";
+import { LimiteDiario } from "@/components/LimiteDiario";
+import { DownloadAppButton } from "@/components/DownloadAppButton";
 import { generateCanalMagnetico, AnalysisResult } from "@/utils/analysisEngine";
 import { useInteligenciaQuantica, AnaliseQuantica } from "@/hooks/useInteligenciaQuantica";
+import { useUsoDiario } from "@/hooks/useUsoDiario";
 import { MODALIDADES } from "@/data/bichoData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Sparkles, Zap, Trophy, Brain, HelpCircle, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const HORARIOS = [
   "09:20", "11:20", "14:20", "16:20", "18:20", "21:20"
@@ -40,7 +45,7 @@ const Index = () => {
   const [modoQuantico, setModoQuantico] = useState(false);
   
   const { analisar, loading: loadingQuantico } = useInteligenciaQuantica();
-
+  const { podeGerar, incrementarUso, geracoesRestantes } = useUsoDiario();
   // Onboarding check removido - agora temos AuthGuard
 
   // Se o app ficou aberto de um dia pro outro, atualiza a data automaticamente
@@ -62,6 +67,19 @@ const Index = () => {
 
   const handleGenerate = async () => {
     if (!modalidade || !horario) return;
+    
+    // Verificar limite diário
+    if (!podeGerar) {
+      toast.error('Limite diário de 50 gerações atingido! Volte amanhã.');
+      return;
+    }
+    
+    // Incrementar uso antes de gerar
+    const sucesso = await incrementarUso();
+    if (!sucesso) {
+      toast.error('Erro ao registrar uso. Tente novamente.');
+      return;
+    }
 
     const selectedModalidade = MODALIDADES.find(m => m.id === modalidade);
     const digitos = selectedModalidade?.digitos || 2;
@@ -156,6 +174,15 @@ const Index = () => {
 
             <TabsContent value="oraculo">
               <div className="space-y-6">
+                {/* Status da Assinatura e Limite */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <AssinaturaBadge />
+                  <LimiteDiario />
+                </div>
+                
+                {/* Botão Download App */}
+                <DownloadAppButton />
+                
                 {/* Canal Magnético */}
                 <div className="p-6 rounded-2xl bg-gradient-to-br from-yellow-900/20 via-card/50 to-green-900/20 border border-gold/30 backdrop-blur-sm space-y-6 relative overflow-hidden">
                   {/* Decoração de dinheiro */}
