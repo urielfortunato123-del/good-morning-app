@@ -1,9 +1,26 @@
-import { Sparkles, Moon, Sun } from "lucide-react";
+import { Sparkles, Moon, Sun, Shield, LogOut, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
+  const navigate = useNavigate();
+  const { user, isAdmin, signOut, plano } = useAuth();
   const now = new Date();
   const hour = now.getHours();
   const isNight = hour < 6 || hour >= 18;
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   return (
     <header className="relative overflow-hidden border-b border-gold/20 bg-gradient-to-r from-card via-cosmic to-card">
@@ -46,6 +63,60 @@ const Header = () => {
                 {now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
             </div>
+
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-muted/50 border border-gold/20 hover:bg-gold/10"
+                  >
+                    <User className="w-4 h-4 text-gold" />
+                    <span className="text-sm text-muted-foreground font-cormorant hidden sm:inline max-w-[100px] truncate">
+                      {user.email?.split('@')[0]}
+                    </span>
+                    {isAdmin && (
+                      <Shield className="w-3 h-3 text-yellow-500" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-card border-gold/20">
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-cinzel text-foreground">{user.email}</p>
+                    {plano && (
+                      <p className="text-xs text-gold capitalize">Plano: {plano}</p>
+                    )}
+                    {isAdmin && (
+                      <p className="text-xs text-yellow-500 flex items-center gap-1">
+                        <Shield className="w-3 h-3" /> Administrador
+                      </p>
+                    )}
+                  </div>
+                  <DropdownMenuSeparator className="bg-gold/10" />
+                  
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/admin')}
+                        className="cursor-pointer hover:bg-gold/10"
+                      >
+                        <Shield className="w-4 h-4 mr-2 text-gold" />
+                        <span className="font-cormorant">Painel Admin</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-gold/10" />
+                    </>
+                  )}
+                  
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="cursor-pointer hover:bg-red-500/10 text-red-400"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    <span className="font-cormorant">Sair</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>

@@ -41,13 +41,7 @@ const Index = () => {
   
   const { analisar, loading: loadingQuantico } = useInteligenciaQuantica();
 
-  // Check onboarding on mount
-  useEffect(() => {
-    const completed = localStorage.getItem("onboarding_completed");
-    if (!completed) {
-      navigate("/onboarding");
-    }
-  }, [navigate]);
+  // Onboarding check removido - agora temos AuthGuard
 
   // Se o app ficou aberto de um dia pro outro, atualiza a data automaticamente
   useEffect(() => {
